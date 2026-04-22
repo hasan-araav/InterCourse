@@ -1,13 +1,22 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
 import NavLink from '@/Components/NavLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
-import { Link } from '@inertiajs/vue3';
+import AdminLayout from '@/Layouts/AdminLayout.vue';
+import EmployeeLayout from '@/Layouts/EmployeeLayout.vue';
+import { Link, usePage } from '@inertiajs/vue3';
 
 const showingNavigationDropdown = ref(false);
+
+const page = usePage();
+const user = computed(() => page.props.auth.user);
+
+const roleLayout = computed(() => {
+    return user.value.role === 'admin' ? AdminLayout : EmployeeLayout;
+});
 </script>
 
 <template>
@@ -29,23 +38,11 @@ const showingNavigationDropdown = ref(false);
                                 </Link>
                             </div>
 
-                            <!-- Navigation Links -->
+                            <!-- Navigation Links (Moved to sidebars, but can keep common ones if needed) -->
                             <div
                                 class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex"
                             >
-                                <NavLink
-                                    :href="route('dashboard')"
-                                    :active="route().current('dashboard')"
-                                >
-                                    Dashboard
-                                </NavLink>
-                                <NavLink
-                                    v-if="$page.props.auth.user.role === 'admin'"
-                                    :href="route('register')"
-                                    :active="route().current('register')"
-                                >
-                                    Register User
-                                </NavLink>
+                                <!-- Common links could go here -->
                             </div>
                         </div>
 
@@ -154,7 +151,7 @@ const showingNavigationDropdown = ref(false);
                         Dashboard
                     </ResponsiveNavLink>
                     <ResponsiveNavLink
-                        v-if="$page.props.auth.user.role === 'admin'"
+                        v-if="user.role === 'admin'"
                         :href="route('register')"
                         :active="route().current('register')"
                     >
@@ -193,20 +190,22 @@ const showingNavigationDropdown = ref(false);
                 </div>
             </nav>
 
-            <!-- Page Heading -->
-            <header
-                class="bg-white shadow"
-                v-if="$slots.header"
-            >
-                <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-                    <slot name="header" />
-                </div>
-            </header>
+            <component :is="roleLayout" :user="user">
+                <!-- Page Heading -->
+                <header
+                    class="bg-white shadow"
+                    v-if="$slots.header"
+                >
+                    <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+                        <slot name="header" />
+                    </div>
+                </header>
 
-            <!-- Page Content -->
-            <main>
-                <slot />
-            </main>
+                <!-- Page Content -->
+                <main>
+                    <slot />
+                </main>
+            </component>
         </div>
     </div>
 </template>
