@@ -39,6 +39,13 @@ const showingNavigationDropdown = ref(false);
                                 >
                                     Dashboard
                                 </NavLink>
+                                <NavLink
+                                    v-if="$page.props.auth.user.role === 'admin'"
+                                    :href="route('register')"
+                                    :active="route().current('register')"
+                                >
+                                    Register User
+                                </NavLink>
                             </div>
                         </div>
 
@@ -132,21 +139,28 @@ const showingNavigationDropdown = ref(false);
                 </div>
 
                 <!-- Responsive Navigation Menu -->
-                <div
-                    :class="{
-                        block: showingNavigationDropdown,
-                        hidden: !showingNavigationDropdown,
-                    }"
-                    class="sm:hidden"
-                >
-                    <div class="space-y-1 pb-3 pt-2">
-                        <ResponsiveNavLink
-                            :href="route('dashboard')"
-                            :active="route().current('dashboard')"
-                        >
-                            Dashboard
-                        </ResponsiveNavLink>
-                    </div>
+            <div
+                :class="{
+                    block: showingNavigationDropdown,
+                    hidden: !showingNavigationDropdown,
+                }"
+                class="sm:hidden"
+            >
+                <div class="space-y-1 pb-3 pt-2">
+                    <ResponsiveNavLink
+                        :href="route('dashboard')"
+                        :active="route().current('dashboard')"
+                    >
+                        Dashboard
+                    </ResponsiveNavLink>
+                    <ResponsiveNavLink
+                        v-if="$page.props.auth.user.role === 'admin'"
+                        :href="route('register')"
+                        :active="route().current('register')"
+                    >
+                        Register User
+                    </ResponsiveNavLink>
+                </div>
 
                     <!-- Responsive Settings Options -->
                     <div
