@@ -21,6 +21,10 @@ Route::get('/', function () {
 });
 
 Route::get('/dashboard', function (Request $request) {
+    if ($request->user()->role === 'admin') {
+        return redirect()->route('admin.dashboard');
+    }
+
     $workshops = Workshop::withCount(['users as confirmed_count' => function ($query) {
         $query->where('status', 'confirmed');
     }])
@@ -37,6 +41,7 @@ Route::get('/dashboard', function (Request $request) {
             'starts_at' => $workshop->starts_at,
             'duration_minutes' => $workshop->duration_minutes,
             'capacity' => $workshop->capacity,
+            'cover_photo_url' => $workshop->cover_photo_url,
             'confirmed_count' => $workshop->confirmed_count,
             'remaining_seats' => max(0, $workshop->capacity - $workshop->confirmed_count),
             'user_registration' => $registration ? [
@@ -46,7 +51,7 @@ Route::get('/dashboard', function (Request $request) {
         ];
     });
 
-    return Inertia::render('Dashboard', [
+    return Inertia::render('Employee/Dashboard', [
         'workshops' => $workshops,
     ]);
 })->middleware(['auth', 'verified'])->name('dashboard');
@@ -90,6 +95,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 });
 
 Route::middleware('auth')->group(function () {
+    Route::get('/workshops/{workshop}', [RegistrationController::class, 'show'])->name('workshops.show');
     Route::post('/workshops/{workshop}/register', [RegistrationController::class, 'store'])->name('workshops.register');
     Route::delete('/workshops/{workshop}/cancel', [RegistrationController::class, 'destroy'])->name('workshops.cancel');
 

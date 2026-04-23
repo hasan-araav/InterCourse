@@ -1,7 +1,17 @@
 <script setup>
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import EmployeeLayout from '@/Layouts/EmployeeLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
-import DangerButton from '@/Components/DangerButton.vue';
+import { 
+    Calendar, 
+    Clock, 
+    ChevronRight, 
+    CheckCircle2, 
+    AlertCircle,
+    ArrowRight,
+    Activity,
+    Trash2,
+    CalendarCheck
+} from 'lucide-vue-next';
 
 const props = defineProps({
     registrations: Array,
@@ -16,7 +26,7 @@ const cancel = (workshopId) => {
 };
 
 const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleString([], {
+    return new Date(dateString).toLocaleDateString([], {
         weekday: 'short',
         month: 'short',
         day: 'numeric',
@@ -29,67 +39,94 @@ const formatDate = (dateString) => {
 <template>
     <Head title="My Schedule" />
 
-    <AuthenticatedLayout>
+    <EmployeeLayout>
         <template #header>
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">My Schedule</h2>
+            <div class="py-4">
+                <h2 class="text-3xl font-black text-gray-900 tracking-tight">My Schedule</h2>
+                <p class="text-gray-500 font-medium mt-1">Track your upcoming professional development sessions.</p>
+            </div>
         </template>
 
-        <div class="py-12">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <div v-if="$page.props.flash?.message" class="mb-6 p-4 bg-green-100 text-green-700 rounded-lg shadow-sm">
-                    {{ $page.props.flash.message }}
+        <div class="space-y-8">
+            <!-- Flash Message -->
+            <div v-if="$page.props.flash?.message" class="p-4 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center text-emerald-700 font-bold text-sm animate-in fade-in slide-in-from-top-4 duration-500">
+                <div class="bg-emerald-100 p-1 rounded-lg mr-3">
+                    <CheckCircle2 class="h-4 w-4" />
                 </div>
+                {{ $page.props.flash.message }}
+            </div>
 
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="p-6 text-gray-900">
-                        <div v-if="registrations.length > 0" class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200">
-                                <thead class="bg-gray-50">
-                                    <tr>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Workshop</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="bg-white divide-y divide-gray-200">
-                                    <tr v-for="reg in registrations" :key="reg.id">
-                                        <td class="px-6 py-4">
-                                            <div class="text-sm font-medium text-gray-900">{{ reg.title }}</div>
-                                            <div class="text-xs text-gray-500">{{ reg.duration_minutes }} mins</div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {{ formatDate(reg.starts_at) }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <span 
-                                                :class="{
-                                                    'bg-green-100 text-green-800': reg.status === 'confirmed',
-                                                    'bg-yellow-100 text-yellow-800': reg.status === 'waitlisted'
-                                                }"
-                                                class="px-2.5 py-0.5 rounded-full text-xs font-medium"
-                                            >
-                                                {{ reg.status === 'confirmed' ? 'Confirmed' : 'Waitlisted (#' + reg.position + ')' }}
-                                            </span>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                            <DangerButton @click="cancel(reg.id)">
-                                                Cancel
-                                            </DangerButton>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                        <div v-else class="text-center py-8">
-                            <p class="text-gray-500 mb-4">You haven't registered for any workshops yet.</p>
-                            <Link :href="route('dashboard')" class="text-indigo-600 hover:text-indigo-900 font-medium">
-                                Browse Workshops →
-                            </Link>
-                        </div>
-                    </div>
+            <!-- Schedule Table -->
+            <div class="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="text-xs font-black text-gray-400 uppercase tracking-widest border-b border-gray-50 bg-gray-50/50">
+                                <th class="px-8 py-5">Workshop</th>
+                                <th class="px-8 py-5">Schedule</th>
+                                <th class="px-8 py-5">Status</th>
+                                <th class="px-8 py-5"></th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-50">
+                            <tr v-for="reg in registrations" :key="reg.id" class="group hover:bg-gray-50/80 transition-all duration-200">
+                                <td class="px-8 py-6">
+                                    <div class="font-black text-gray-900 group-hover:text-indigo-600 transition-colors">{{ reg.title }}</div>
+                                    <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-0.5">Duration: {{ reg.duration_minutes }} Mins</div>
+                                </td>
+                                <td class="px-8 py-6">
+                                    <div class="flex items-center text-sm font-bold text-gray-600">
+                                        <Calendar class="h-4 w-4 mr-2 text-gray-300" />
+                                        {{ formatDate(reg.starts_at) }}
+                                    </div>
+                                </td>
+                                <td class="px-8 py-6">
+                                    <span 
+                                        :class="[
+                                            reg.status === 'confirmed' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-amber-50 text-amber-700 border-amber-100',
+                                            'px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full border shadow-sm'
+                                        ]"
+                                    >
+                                        {{ reg.status === 'confirmed' ? 'Confirmed' : 'Waitlisted #' + reg.position }}
+                                    </span>
+                                </td>
+                                <td class="px-8 py-6 text-right">
+                                    <div class="flex items-center justify-end space-x-3">
+                                        <Link :href="route('workshops.show', reg.id)" class="text-xs font-black text-indigo-600 hover:text-indigo-700 uppercase tracking-widest">
+                                            Details
+                                        </Link>
+                                        <button 
+                                            @click="cancel(reg.id)"
+                                            class="p-2 text-gray-300 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
+                                            title="Cancel Registration"
+                                        >
+                                            <Trash2 class="h-5 w-5" />
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr v-if="registrations.length === 0">
+                                <td colspan="4" class="px-8 py-24 text-center">
+                                    <div class="max-w-xs mx-auto">
+                                        <div class="bg-gray-50 h-20 w-20 rounded-full flex items-center justify-center mx-auto mb-6">
+                                            <CalendarCheck class="h-10 w-10 text-gray-300" />
+                                        </div>
+                                        <h3 class="text-xl font-black text-gray-900">Your schedule is empty</h3>
+                                        <p class="text-gray-400 font-medium mt-2 mb-8">You haven't registered for any workshops yet.</p>
+                                        <Link 
+                                            :href="route('dashboard')"
+                                            class="inline-flex items-center justify-center px-8 py-3 bg-indigo-600 text-white font-bold rounded-2xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100"
+                                        >
+                                            Browse Workshops
+                                            <ArrowRight class="ml-2 h-5 w-5" />
+                                        </Link>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
-    </AuthenticatedLayout>
+    </EmployeeLayout>
 </template>
