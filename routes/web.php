@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\AdminStatsController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RegistrationController;
@@ -79,6 +80,13 @@ Route::get('/my-schedule', function (Request $request) {
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminStatsController::class, 'index'])->name('dashboard');
     Route::resource('workshops', WorkshopController::class);
+
+    // User Management
+    Route::get('/users', [UserManagementController::class, 'index'])->name('users.index');
+    Route::get('/users/{user}', [UserManagementController::class, 'show'])->name('users.show');
+    Route::post('/users', [UserManagementController::class, 'store'])->name('users.store');
+    Route::post('/users/{user}', [UserManagementController::class, 'update'])->name('users.update');
+    Route::delete('/users/{user}', [UserManagementController::class, 'destroy'])->name('users.destroy');
 });
 
 Route::middleware('auth')->group(function () {

@@ -22,7 +22,7 @@ const isMobileMenuOpen = ref(false);
 const navigation = [
     { name: 'Dashboard', href: route('admin.dashboard'), icon: LayoutDashboard, active: route().current('admin.dashboard') },
     { name: 'Manage Workshops', href: route('admin.workshops.index'), icon: Calendar, active: route().current('admin.workshops.*') },
-    { name: 'Register User', href: route('register'), icon: UserPlus, active: route().current('register') },
+    { name: 'User Directory', href: route('admin.users.index'), icon: Users, active: route().current('admin.users.index') },
 ];
 
 const logout = () => {

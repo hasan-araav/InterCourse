@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password', 'role'])]
+#[Fillable(['name', 'email', 'password', 'role', 'photo_path'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -19,6 +19,18 @@ class User extends Authenticatable
 
     const ROLE_ADMIN = 'admin';
     const ROLE_EMPLOYEE = 'employee';
+
+    /**
+     * Get the user's photo URL.
+     *
+     * @return string
+     */
+    public function getPhotoUrlAttribute(): string
+    {
+        return $this->photo_path
+            ? asset('storage/' . $this->photo_path)
+            : "https://ui-avatars.com/api/?name=" . urlencode($this->name) . "&background=6366f1&color=fff";
+    }
 
     /**
      * Get the attributes that should be cast.
@@ -32,6 +44,8 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    protected $appends = ['photo_url'];
 
     public function workshops()
     {
