@@ -2,11 +2,13 @@
 
 namespace App\Console\Commands;
 
+use App\Mail\WorkshopReminder;
 use App\Models\Workshop;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 #[Signature('app:remind-users-of-workshops')]
 #[Description('Identify upcoming workshops within the next 24 hours and notify confirmed users.')]
@@ -37,15 +39,18 @@ class RemindUsersOfWorkshops extends Command
             $attendeeCount = $workshop->users->count();
             $status = 'Success';
 
-            try {
-                foreach ($workshop->users as $user) {
-                    // Dispatch notification logic here
-                    // e.g., Mail::to($user)->send(new WorkshopReminder($workshop));
-                    Log::info("Reminder sent to {$user->email} for workshop: {$workshop->title}");
+            if ($attendeeCount > 0) {
+                try {
+                    foreach ($workshop->users as $user) {
+                        Mail::to($user->email)->send(new WorkshopReminder($workshop));
+                        Log::info("Reminder sent to {$user->email} for workshop: {$workshop->title}");
+                    }
+                } catch (\Exception $e) {
+                    Log::error("Failed to send reminders for workshop {$workshop->id}: " . $e->getMessage());
+                    $status = 'Failed';
                 }
-            } catch (\Exception $e) {
-                Log::error("Failed to send reminders for workshop {$workshop->id}: " . $e->getMessage());
-                $status = 'Failed';
+            } else {
+                $status = 'No attendees';
             }
 
             $results[] = [
