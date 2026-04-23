@@ -50,12 +50,16 @@ class AdminStatsController extends Controller
         $upcomingStats = $workshops->where('is_past', false)->values();
         $pastStats = $workshops->where('is_past', true)->values();
 
+        // Capacity Alerts: Workshops at > 90% capacity
+        $capacityAlerts = $upcomingStats->where('fill_percentage', '>', 90)->count();
+
         return Inertia::render('Admin/Stats/Index', [
             'mostPopular' => $mostPopular,
             'upcomingStats' => $upcomingStats,
             'pastStats' => $pastStats,
             'totalRegistrations' => $workshops->sum('confirmed_count'),
             'totalWaitlist' => $workshops->sum('waitlist_count'),
+            'capacityAlerts' => $capacityAlerts,
         ]);
     }
 }
