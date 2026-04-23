@@ -27,6 +27,12 @@ const props = defineProps({
                 >
                     Register User
                 </SidebarLink>
+                <SidebarLink
+                    :href="route('admin.workshops.index')"
+                    :active="route().current('admin.workshops.*')"
+                >
+                    Manage Workshops
+                </SidebarLink>
             </nav>
         </aside>
 
