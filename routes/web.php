@@ -77,7 +77,7 @@ Route::get('/my-schedule', function (Request $request) {
 })->middleware(['auth', 'verified'])->name('my-schedule');
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/stats', [AdminStatsController::class, 'index'])->name('stats.index');
+    Route::get('/dashboard', [AdminStatsController::class, 'index'])->name('dashboard');
     Route::resource('workshops', WorkshopController::class);
 });
 

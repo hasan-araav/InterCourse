@@ -45,8 +45,39 @@ class WorkshopController extends Controller
      */
     public function show(Workshop $workshop): Response
     {
+        $workshop->load(['users' => function ($query) {
+            $query->withPivot('status', 'position', 'created_at')
+                  ->orderBy('registrations.created_at');
+        }]);
+
         return Inertia::render('Workshops/Show', [
-            'workshop' => $workshop,
+            'workshop' => [
+                'id' => $workshop->id,
+                'title' => $workshop->title,
+                'description' => $workshop->description,
+                'starts_at' => $workshop->starts_at,
+                'duration_minutes' => $workshop->duration_minutes,
+                'capacity' => $workshop->capacity,
+                'attendees' => $workshop->users->where('pivot.status', 'confirmed')->map(function ($user) {
+                    return [
+                        'id' => $user->id,
+                        'name' => $user->name,
+                        'email' => $user->email,
+                        'photo' => "https://ui-avatars.com/api/?name=" . urlencode($user->name) . "&color=7F9CF5&background=EBF4FF",
+                        'registered_at' => $user->pivot->created_at->format('M d, Y H:i'),
+                    ];
+                })->values(),
+                'waitlist' => $workshop->users->where('pivot.status', 'waitlisted')->map(function ($user) {
+                    return [
+                        'id' => $user->id,
+                        'name' => $user->name,
+                        'email' => $user->email,
+                        'photo' => "https://ui-avatars.com/api/?name=" . urlencode($user->name) . "&color=FBBF24&background=FFFBEB",
+                        'position' => $user->pivot->position,
+                        'registered_at' => $user->pivot->created_at->format('M d, Y H:i'),
+                    ];
+                })->values(),
+            ],
         ]);
     }
 

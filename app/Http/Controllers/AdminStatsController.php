@@ -53,13 +53,29 @@ class AdminStatsController extends Controller
         // Capacity Alerts: Workshops at > 90% capacity
         $capacityAlerts = $upcomingStats->where('fill_percentage', '>', 90)->count();
 
-        return Inertia::render('Admin/Stats/Index', [
+        // Registration Trends (last 7 days)
+        $registrationTrends = DB::table('registrations')
+            ->select(DB::raw('DATE(created_at) as date'), DB::raw('count(*) as count'))
+            ->where('created_at', '>=', now()->subDays(7))
+            ->groupBy('date')
+            ->orderBy('date')
+            ->get();
+
+        // Status Distribution
+        $statusDistribution = [
+            'confirmed' => $workshops->sum('confirmed_count'),
+            'waitlisted' => $workshops->sum('waitlist_count'),
+        ];
+
+        return Inertia::render('Admin/Dashboard', [
             'mostPopular' => $mostPopular,
             'upcomingStats' => $upcomingStats,
             'pastStats' => $pastStats,
             'totalRegistrations' => $workshops->sum('confirmed_count'),
             'totalWaitlist' => $workshops->sum('waitlist_count'),
             'capacityAlerts' => $capacityAlerts,
+            'registrationTrends' => $registrationTrends,
+            'statusDistribution' => $statusDistribution,
         ]);
     }
 }
