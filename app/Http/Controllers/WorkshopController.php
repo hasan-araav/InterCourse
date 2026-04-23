@@ -6,27 +6,70 @@ use App\Http\Requests\StoreWorkshopRequest;
 use App\Http\Requests\UpdateWorkshopRequest;
 use App\Models\Workshop;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Support\Facades\Storage;
 
 class WorkshopController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index(): Response
+    public function index(Request $request): Response
     {
+        $query = Workshop::query()->withCount([
+            'users as confirmed_count' => fn($q) => $q->where('status', 'confirmed'),
+            'users as waitlist_count' => fn($q) => $q->where('status', 'waitlisted'),
+        ]);
+
+        // Search
+        if ($request->filled('search')) {
+            $query->where('title', 'like', '%' . $request->search . '%')
+                  ->orWhere('description', 'like', '%' . $request->search . '%');
+        }
+
+        // Sorting
+        $sortField = $request->input('sort', 'starts_at');
+        $sortDirection = $request->input('direction', 'desc');
+        $query->orderBy($sortField, $sortDirection);
+
+        $workshops = $query->paginate(10)->withQueryString()->through(fn ($workshop) => [
+            'id' => $workshop->id,
+            'title' => $workshop->title,
+            'description' => $workshop->description,
+            'starts_at' => $workshop->starts_at->format('M d, Y H:i'),
+            'duration_minutes' => $workshop->duration_minutes,
+            'capacity' => $workshop->capacity,
+            'confirmed_count' => $workshop->confirmed_count,
+            'waitlist_count' => $workshop->waitlist_count,
+            'cover_photo' => $workshop->cover_photo_url,
+            'is_past' => $workshop->starts_at->isPast(),
+        ]);
+
+        // Stats
+        $stats = [
+            'total_workshops' => Workshop::count(),
+            'upcoming' => Workshop::where('starts_at', '>', now())->count(),
+            'total_confirmed' => \App\Models\Registration::where('status', 'confirmed')->count(),
+            'avg_fill_rate' => Workshop::count() > 0
+                ? round(Workshop::all()->avg(fn($w) => ($w->confirmedUsers()->count() / max(1, $w->capacity)) * 100), 1)
+                : 0,
+        ];
+
         return Inertia::render('Workshops/Index', [
-            'workshops' => Workshop::latest()->paginate(10),
+            'workshops' => $workshops,
+            'filters' => $request->only(['search', 'sort', 'direction']),
+            'stats' => $stats,
         ]);
     }
 
     /**
      * Show the form for creating a new resource.
      */
-    public function create(): Response
+    public function create(): RedirectResponse
     {
-        return Inertia::render('Workshops/Create');
+        return redirect()->route('admin.workshops.index');
     }
 
     /**
@@ -34,7 +77,13 @@ class WorkshopController extends Controller
      */
     public function store(StoreWorkshopRequest $request): RedirectResponse
     {
-        Workshop::create($request->validated());
+        $validated = $request->validated();
+
+        if ($request->hasFile('cover_photo')) {
+            $validated['cover_photo_path'] = $request->file('cover_photo')->store('workshop-covers', 'public');
+        }
+
+        Workshop::create($validated);
 
         return redirect()->route('admin.workshops.index')
             ->with('message', 'Workshop created successfully.');
@@ -55,15 +104,16 @@ class WorkshopController extends Controller
                 'id' => $workshop->id,
                 'title' => $workshop->title,
                 'description' => $workshop->description,
-                'starts_at' => $workshop->starts_at,
+                'starts_at' => $workshop->starts_at->format('M d, Y H:i'),
                 'duration_minutes' => $workshop->duration_minutes,
                 'capacity' => $workshop->capacity,
+                'cover_photo' => $workshop->cover_photo_url,
                 'attendees' => $workshop->users->where('pivot.status', 'confirmed')->map(function ($user) {
                     return [
                         'id' => $user->id,
                         'name' => $user->name,
                         'email' => $user->email,
-                        'photo' => "https://ui-avatars.com/api/?name=" . urlencode($user->name) . "&color=7F9CF5&background=EBF4FF",
+                        'photo' => $user->photo_url,
                         'registered_at' => $user->pivot->created_at->format('M d, Y H:i'),
                     ];
                 })->values(),
@@ -72,7 +122,7 @@ class WorkshopController extends Controller
                         'id' => $user->id,
                         'name' => $user->name,
                         'email' => $user->email,
-                        'photo' => "https://ui-avatars.com/api/?name=" . urlencode($user->name) . "&color=FBBF24&background=FFFBEB",
+                        'photo' => $user->photo_url,
                         'position' => $user->pivot->position,
                         'registered_at' => $user->pivot->created_at->format('M d, Y H:i'),
                     ];
@@ -84,11 +134,9 @@ class WorkshopController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Workshop $workshop): Response
+    public function edit(Workshop $workshop): RedirectResponse
     {
-        return Inertia::render('Workshops/Edit', [
-            'workshop' => $workshop,
-        ]);
+        return redirect()->route('admin.workshops.index');
     }
 
     /**
@@ -96,7 +144,16 @@ class WorkshopController extends Controller
      */
     public function update(UpdateWorkshopRequest $request, Workshop $workshop): RedirectResponse
     {
-        $workshop->update($request->validated());
+        $validated = $request->validated();
+
+        if ($request->hasFile('cover_photo')) {
+            if ($workshop->cover_photo_path) {
+                Storage::disk('public')->delete($workshop->cover_photo_path);
+            }
+            $validated['cover_photo_path'] = $request->file('cover_photo')->store('workshop-covers', 'public');
+        }
+
+        $workshop->update($validated);
 
         return redirect()->route('admin.workshops.index')
             ->with('message', 'Workshop updated successfully.');
@@ -107,6 +164,10 @@ class WorkshopController extends Controller
      */
     public function destroy(Workshop $workshop): RedirectResponse
     {
+        if ($workshop->cover_photo_path) {
+            Storage::disk('public')->delete($workshop->cover_photo_path);
+        }
+
         $workshop->delete();
 
         return redirect()->route('admin.workshops.index')

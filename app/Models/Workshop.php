@@ -16,7 +16,22 @@ class Workshop extends Model
         'starts_at',
         'duration_minutes',
         'capacity',
+        'cover_photo_path',
     ];
+
+    /**
+     * Get the workshop's cover photo URL.
+     *
+     * @return string
+     */
+    public function getCoverPhotoUrlAttribute(): string
+    {
+        return $this->cover_photo_path
+            ? asset('storage/' . $this->cover_photo_path)
+            : "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=2070&auto=format&fit=crop";
+    }
+
+    protected $appends = ['cover_photo_url'];
 
     protected function casts(): array
     {

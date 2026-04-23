@@ -36,7 +36,9 @@ const props = defineProps({
 });
 
 const showCreateModal = ref(false);
+const showDeleteConfirmation = ref(false);
 const editingUser = ref(null);
+const userToDelete = ref(null);
 const search = ref(props.filters.search || '');
 const photoPreview = ref(null);
 
@@ -109,8 +111,18 @@ const submit = () => {
 };
 
 const deleteUser = (user) => {
-    if (confirm(`Are you sure you want to delete ${user.name}? This action cannot be undone.`)) {
-        router.delete(route('admin.users.destroy', user.id));
+    userToDelete.value = user;
+    showDeleteConfirmation.value = true;
+};
+
+const confirmDelete = () => {
+    if (userToDelete.value) {
+        router.delete(route('admin.users.destroy', userToDelete.value.id), {
+            onSuccess: () => {
+                showDeleteConfirmation.value = false;
+                userToDelete.value = null;
+            },
+        });
     }
 };
 
@@ -467,6 +479,32 @@ const getSortIcon = (field) => {
                         </PrimaryButton>
                     </div>
                 </form>
+            </div>
+        </Modal>
+
+        <!-- Delete User Confirmation Modal -->
+        <Modal :show="showDeleteConfirmation" @close="showDeleteConfirmation = false" maxWidth="md">
+            <div class="p-8 text-center">
+                <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-6">
+                    <Trash2 class="h-8 w-8 text-red-600" />
+                </div>
+                <h2 class="text-2xl font-black text-gray-900 tracking-tight mb-2">Confirm Deletion</h2>
+                <p class="text-sm text-gray-500 font-medium mb-8">
+                    Are you sure you want to delete <span class="font-black text-gray-900">{{ userToDelete?.name }}</span>? 
+                    This action is permanent and will remove all their data from the InterCourse Academy.
+                </p>
+
+                <div class="flex items-center justify-center space-x-4">
+                    <SecondaryButton @click="showDeleteConfirmation = false" class="rounded-2xl border-2 font-bold px-6 py-3 flex-1">
+                        No, Keep User
+                    </SecondaryButton>
+                    <button 
+                        @click="confirmDelete"
+                        class="inline-flex items-center justify-center px-6 py-3 bg-red-600 text-white font-bold rounded-2xl hover:bg-red-700 transition-all shadow-lg shadow-red-100 flex-1"
+                    >
+                        Yes, Delete
+                    </button>
+                </div>
             </div>
         </Modal>
     </AdminLayout>
