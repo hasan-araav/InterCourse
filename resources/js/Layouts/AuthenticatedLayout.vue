@@ -157,6 +157,13 @@ const roleLayout = computed(() => {
                     >
                         Register User
                     </ResponsiveNavLink>
+                    <ResponsiveNavLink
+                        v-if="user.role === 'employee'"
+                        :href="route('my-schedule')"
+                        :active="route().current('my-schedule')"
+                    >
+                        My Schedule
+                    </ResponsiveNavLink>
                 </div>
 
                     <!-- Responsive Settings Options -->

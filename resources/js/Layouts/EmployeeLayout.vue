@@ -21,6 +21,12 @@ const props = defineProps({
                 >
                     Dashboard
                 </SidebarLink>
+                <SidebarLink
+                    :href="route('my-schedule')"
+                    :active="route().current('my-schedule')"
+                >
+                    My Schedule
+                </SidebarLink>
             </nav>
         </aside>
 

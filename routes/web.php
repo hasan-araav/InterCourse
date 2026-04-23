@@ -49,6 +49,32 @@ Route::get('/dashboard', function (Request $request) {
     ]);
 })->middleware(['auth', 'verified'])->name('dashboard');
 
+Route::get('/my-schedule', function (Request $request) {
+    $registrations = $request->user()->workshops()
+        ->withCount(['users as confirmed_count' => function ($query) {
+            $query->where('status', 'confirmed');
+        }])
+        ->orderBy('starts_at')
+        ->get()
+        ->map(function ($workshop) {
+            return [
+                'id' => $workshop->id,
+                'title' => $workshop->title,
+                'description' => $workshop->description,
+                'starts_at' => $workshop->starts_at,
+                'duration_minutes' => $workshop->duration_minutes,
+                'capacity' => $workshop->capacity,
+                'confirmed_count' => $workshop->confirmed_count,
+                'status' => $workshop->pivot->status,
+                'position' => $workshop->pivot->position,
+            ];
+        });
+
+    return Inertia::render('Employee/MySchedule', [
+        'registrations' => $registrations,
+    ]);
+})->middleware(['auth', 'verified'])->name('my-schedule');
+
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::resource('workshops', WorkshopController::class);
 });
