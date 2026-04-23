@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Events\RegistrationUpdated;
 use App\Models\Registration;
 use App\Models\User;
 use App\Models\Workshop;
@@ -46,12 +47,16 @@ class RegistrationService
                     ->count() + 1;
             }
 
-            return Registration::create([
+            $registration = Registration::create([
                 'user_id' => $user->id,
                 'workshop_id' => $workshop->id,
                 'status' => $status,
                 'position' => $position,
             ]);
+
+            RegistrationUpdated::dispatch($workshop);
+
+            return $registration;
         });
     }
 
@@ -79,6 +84,8 @@ class RegistrationService
                 // If a waitlisted registration was cancelled, reorder positions
                 $this->reorderWaitlist($workshop);
             }
+
+            RegistrationUpdated::dispatch($workshop);
         });
     }
 

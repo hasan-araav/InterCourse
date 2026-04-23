@@ -3,10 +3,14 @@ import { Head, router } from '@inertiajs/vue3';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import DangerButton from '@/Components/DangerButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
+import { usePolling } from '@/Composables/usePolling';
 
 const props = defineProps({
     workshops: Array,
 });
+
+// Start polling as a fallback if WebSockets are not active
+usePolling(10000);
 
 const register = (workshopId) => {
     router.post(route('workshops.register', workshopId), {}, {
