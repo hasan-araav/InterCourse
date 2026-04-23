@@ -24,5 +24,9 @@ class DatabaseSeeder extends Seeder
             'name' => 'Employee User',
             'email' => 'employee@example.com',
         ]);
+
+        $this->call([
+            WorkshopSeeder::class,
+        ]);
     }
 }
