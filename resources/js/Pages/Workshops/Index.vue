@@ -81,7 +81,7 @@ const openEditModal = (workshop) => {
     form.speaker_name = workshop.speaker_name || '';
     form.speaker_bio = workshop.speaker_bio || '';
     form.speaker_photo = null;
-    form._method = 'POST';
+    form._method = 'PATCH';
     photoPreview.value = workshop.cover_photo;
     speakerPhotoPreview.value = workshop.speaker_photo;
     showFormModal.value = true;

@@ -1,6 +1,8 @@
 <script setup>
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { ref, onMounted, onUnmounted, watch, computed } from 'vue';
+import Modal from '@/Components/Modal.vue';
+import SecondaryButton from '@/Components/SecondaryButton.vue';
 import {
     Calendar,
     Clock,
@@ -13,7 +15,8 @@ import {
     ArrowRight,
     Activity,
     MapPin,
-    Users
+    Users,
+    Trash2
 } from 'lucide-vue-next';
 import EmployeeLayout from '@/Layouts/EmployeeLayout.vue';
 import { usePolling } from '@/Composables/usePolling';
@@ -27,6 +30,8 @@ const search = ref('');
 const pulseStates = ref({});
 let echoChannels = [];
 const page = usePage();
+const showCancelConfirmation = ref(false);
+const workshopToCancel = ref(null);
 
 // Watch for prop changes and update local state
 watch(() => props.workshops, (newWorkshops) => {
@@ -77,6 +82,22 @@ const register = (workshopId) => {
     router.post(route('workshops.register', workshopId), {}, {
         preserveScroll: true,
     });
+};
+
+const confirmCancel = (workshop) => {
+    workshopToCancel.value = workshop;
+    showCancelConfirmation.value = true;
+};
+
+const cancelWorkshop = () => {
+    if (workshopToCancel.value) {
+        router.delete(route('workshops.cancel', workshopToCancel.value.id), {
+            onSuccess: () => {
+                showCancelConfirmation.value = false;
+                workshopToCancel.value = null;
+            },
+        });
+    }
 };
 
 const cancel = (workshopId) => {
@@ -209,7 +230,9 @@ const filteredWorkshops = computed(() => {
                             </Link>
 
                             <div v-if="workshop.user_registration">
-                                <button @click="cancel(workshop.id)" class="text-xs font-black text-rose-500 hover:text-rose-700 transition-colors uppercase tracking-widest">
+                                <button
+                                @click="confirmCancel(workshop)"
+                                class="text-xs font-black text-rose-500 hover:text-rose-700 transition-colors uppercase tracking-widest">
                                     Cancel
                                 </button>
                             </div>
@@ -236,5 +259,31 @@ const filteredWorkshops = computed(() => {
                 </div>
             </div>
         </div>
+
+        <!-- Cancel Confirmation Modal -->
+        <Modal :show="showCancelConfirmation" @close="showCancelConfirmation = false" maxWidth="md">
+            <div class="p-8 text-center">
+                <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-6">
+                    <Trash2 class="h-8 w-8 text-red-600" />
+                </div>
+                <h2 class="text-2xl font-black text-gray-900 tracking-tight mb-2">Cancel Workshop</h2>
+                <p class="text-sm text-gray-500 font-medium mb-8">
+                    Are you sure you want to cancel <span class="font-black text-gray-900">{{ workshopToCancel?.title }}</span>?
+                    This will cancel your registrations for this event.
+                </p>
+
+                <div class="flex items-center justify-center space-x-4">
+                    <SecondaryButton @click="showCancelConfirmation = false" class="rounded-2xl border-2 font-bold px-6 py-3 flex-1">
+                        No, Keep It
+                    </SecondaryButton>
+                    <button
+                        @click="cancelWorkshop"
+                        class="inline-flex items-center justify-center px-6 py-3 bg-red-600 text-white font-bold rounded-2xl hover:bg-red-700 transition-all shadow-lg shadow-red-100 flex-1"
+                    >
+                        Yes, Cancel
+                    </button>
+                </div>
+            </div>
+        </Modal>
     </EmployeeLayout>
 </template>
