@@ -3,7 +3,9 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\WorkshopController;
+use App\Models\Workshop;
 use Illuminate\Foundation\Application;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -16,8 +18,35 @@ Route::get('/', function () {
     ]);
 });
 
-Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
+Route::get('/dashboard', function (Request $request) {
+    $workshops = Workshop::withCount(['users as confirmed_count' => function ($query) {
+        $query->where('status', 'confirmed');
+    }])
+    ->where('starts_at', '>', now())
+    ->orderBy('starts_at')
+    ->get()
+    ->map(function ($workshop) use ($request) {
+        $registration = $request->user()->workshops()->where('workshop_id', $workshop->id)->first();
+
+        return [
+            'id' => $workshop->id,
+            'title' => $workshop->title,
+            'description' => $workshop->description,
+            'starts_at' => $workshop->starts_at,
+            'duration_minutes' => $workshop->duration_minutes,
+            'capacity' => $workshop->capacity,
+            'confirmed_count' => $workshop->confirmed_count,
+            'remaining_seats' => max(0, $workshop->capacity - $workshop->confirmed_count),
+            'user_registration' => $registration ? [
+                'status' => $registration->pivot->status,
+                'position' => $registration->pivot->position,
+            ] : null,
+        ];
+    });
+
+    return Inertia::render('Dashboard', [
+        'workshops' => $workshops,
+    ]);
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
