@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\AdminStatsController;
 use App\Http\Controllers\ProfileController;
@@ -98,6 +99,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/workshops/{workshop}', [RegistrationController::class, 'show'])->name('workshops.show');
     Route::post('/workshops/{workshop}/register', [RegistrationController::class, 'store'])->name('workshops.register');
     Route::delete('/workshops/{workshop}/cancel', [RegistrationController::class, 'destroy'])->name('workshops.cancel');
+
+    // Push Subscriptions
+    Route::get('/notifications/vapid-key', [PushSubscriptionController::class, 'vapidKey'])->name('notifications.vapid-key');
+    Route::post('/notifications/subscribe', [PushSubscriptionController::class, 'store'])->name('notifications.subscribe');
+    Route::post('/notifications/unsubscribe', [PushSubscriptionController::class, 'destroy'])->name('notifications.unsubscribe');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

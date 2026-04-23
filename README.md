@@ -15,8 +15,17 @@ Run the following command to initialize the project (assuming SQLite):
 ```bash
 cp .env.example .env && touch database/database.sqlite && composer install && npm install && php artisan key:generate && php artisan migrate --seed && npm run build
 ```
+## Admin Login
+- **Username**: `admin@intercourse.com`
+- **Password**: `password`
 
----
+``---
+
+## Employee Login
+- **Username**: `employee@intercourse.com`
+- **Password**: `password`
+
+``---
 
 ## Command Reference
 
@@ -28,6 +37,9 @@ php artisan app:remind-users-of-workshops
 
 # Dry run (list recipients without sending)
 php artisan app:remind-users-of-workshops --dry-run
+
+# Run this command to start reverb server
+php artisan reverb:start
 ```
 
 ### Test Suite

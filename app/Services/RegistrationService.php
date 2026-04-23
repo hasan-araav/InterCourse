@@ -7,6 +7,7 @@ use App\Events\UserRegistrationUpdated;
 use App\Models\Registration;
 use App\Models\User;
 use App\Models\Workshop;
+use App\Notifications\PromotedFromWaitlist;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -132,6 +133,9 @@ class RegistrationService
             ]);
 
             UserRegistrationUpdated::dispatch($nextInLine);
+
+            // Send WebPush Notification
+            $nextInLine->user->notify(new PromotedFromWaitlist($workshop));
 
             // After promoting, reorder the remaining waitlist
             $this->reorderWaitlist($workshop);

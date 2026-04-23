@@ -19,11 +19,19 @@ class DatabaseSeeder extends Seeder
         User::factory()->admin()->create([
             'name' => 'Farhana Rahman',
             'email' => 'admin@intercourse.com',
+            'password' => bcrypt('password'),
         ]);
 
         User::factory()->admin()->create([
             'name' => 'System Administrator',
             'email' => 'system@intercourse.com',
+            'password' => bcrypt('password'),
+        ]);
+
+        User::factory()->employee()->create([
+            'name' => 'Employee',
+            'email' => 'employee@intercourse.com',
+            'password' => bcrypt('password'),
         ]);
 
         // Create Employee Users

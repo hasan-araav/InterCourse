@@ -11,14 +11,18 @@ import {
     LogOut,
     Menu,
     X,
-    BookOpen
+    BookOpen,
+    Bell,
+    BellOff
 } from 'lucide-vue-next';
+import { usePushNotifications } from '@/Composables/usePushNotifications';
 
 const props = defineProps({
     user: Object,
 });
 
 const isMobileMenuOpen = ref(false);
+const { isSubscribed, permission, requestPermission, unsubscribeUser } = usePushNotifications();
 
 const navigation = [
     { name: 'Dashboard', href: route('admin.dashboard'), icon: LayoutDashboard, active: route().current('admin.dashboard') },
@@ -61,6 +65,26 @@ const navigation = [
                                 />
                                 {{ item.name }}
                             </Link>
+
+                            <!-- Notification Toggle -->
+                            <button
+                                @click="isSubscribed ? unsubscribeUser() : requestPermission()"
+                                :class="[
+                                    isSubscribed
+                                        ? 'text-emerald-600 hover:bg-emerald-50'
+                                        : 'text-gray-600 hover:bg-gray-50',
+                                    'w-full group flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-200 mt-4'
+                                ]"
+                            >
+                                <component
+                                    :is="isSubscribed ? Bell : BellOff"
+                                    :class="[
+                                        isSubscribed ? 'text-emerald-500' : 'text-gray-400 group-hover:text-gray-500',
+                                        'mr-3 flex-shrink-0 h-5 w-5 transition-colors duration-200'
+                                    ]"
+                                />
+                                {{ isSubscribed ? 'Notifications Active' : 'Enable Notifications' }}
+                            </button>
                         </nav>
                     </div>
 

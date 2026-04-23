@@ -1,21 +1,26 @@
 <script setup>
 import { ref } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
-import { 
-    LayoutDashboard, 
-    Calendar, 
-    Clock, 
-    Users, 
+import {
+    LayoutDashboard,
+    Calendar,
+    Clock,
+    Users,
     Settings,
     LogOut,
     Menu,
     X,
-    BookOpen
+    BookOpen,
+    Bell,
+    BellOff
 } from 'lucide-vue-next';
+import { usePushNotifications } from '@/Composables/usePushNotifications';
 
 const props = defineProps({
     user: Object,
 });
+
+const { isSubscribed, permission, requestPermission, unsubscribeUser } = usePushNotifications();
 
 const navigation = [
     { name: 'Learning Hub', href: route('dashboard'), icon: LayoutDashboard, active: route().current('dashboard') },
@@ -42,24 +47,44 @@ const navigation = [
                                 :key="item.name"
                                 :href="item.href"
                                 :class="[
-                                    item.active 
-                                        ? 'bg-indigo-50 text-indigo-700' 
+                                    item.active
+                                        ? 'bg-indigo-50 text-indigo-700'
                                         : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
                                     'group flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-200'
                                 ]"
                             >
-                                <component 
-                                    :is="item.icon" 
+                                <component
+                                    :is="item.icon"
                                     :class="[
                                         item.active ? 'text-indigo-600' : 'text-gray-400 group-hover:text-gray-500',
                                         'mr-3 flex-shrink-0 h-5 w-5 transition-colors duration-200'
-                                    ]" 
+                                    ]"
                                 />
                                 {{ item.name }}
                             </Link>
+
+                            <!-- Notification Toggle -->
+                            <button
+                                @click="isSubscribed ? unsubscribeUser() : requestPermission()"
+                                :class="[
+                                    isSubscribed
+                                        ? 'text-emerald-600 hover:bg-emerald-50'
+                                        : 'text-gray-600 hover:bg-gray-50',
+                                    'w-full group flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-200 mt-4'
+                                ]"
+                            >
+                                <component
+                                    :is="isSubscribed ? Bell : BellOff"
+                                    :class="[
+                                        isSubscribed ? 'text-emerald-500' : 'text-gray-400 group-hover:text-gray-500',
+                                        'mr-3 flex-shrink-0 h-5 w-5 transition-colors duration-200'
+                                    ]"
+                                />
+                                {{ isSubscribed ? 'Notifications Active' : 'Enable Notifications' }}
+                            </button>
                         </nav>
                     </div>
-                    
+
                     <!-- User Profile & Logout -->
                     <div class="flex-shrink-0 flex flex-col border-t border-gray-200 p-4 space-y-2">
                         <div class="flex items-center px-2 py-2">
@@ -69,9 +94,9 @@ const navigation = [
                                 <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">{{ $page.props.auth.user.role }}</p>
                             </div>
                         </div>
-                        <Link 
-                            :href="route('logout')" 
-                            method="post" 
+                        <Link
+                            :href="route('logout')"
+                            method="post"
                             as="button"
                             class="w-full flex items-center px-3 py-2 text-sm font-bold text-gray-500 hover:bg-rose-50 hover:text-rose-600 rounded-xl transition-all duration-200 group"
                         >
@@ -92,7 +117,7 @@ const navigation = [
                         <div v-if="$slots.header" class="mb-8">
                             <slot name="header" />
                         </div>
-                        
+
                         <slot />
                     </div>
                 </div>

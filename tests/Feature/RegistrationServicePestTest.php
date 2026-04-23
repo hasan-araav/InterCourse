@@ -2,8 +2,10 @@
 
 use App\Models\User;
 use App\Models\Workshop;
+use App\Notifications\PromotedFromWaitlist;
 use App\Services\RegistrationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\ValidationException;
 
 uses(RefreshDatabase::class);
@@ -62,6 +64,27 @@ test('No-Ubiquity Rule: Ensure overlap throws exception', function () {
 
     expect(fn() => $this->service->register($user, $workshop2))
         ->toThrow(ValidationException::class);
+});
+
+test('FIFO Promotion sends WebPush notification', function () {
+    Notification::fake();
+
+    $workshop = Workshop::factory()->create(['capacity' => 1]);
+    $userConfirmed = User::factory()->create();
+    $userWaitlisted = User::factory()->create();
+
+    $this->service->register($userConfirmed, $workshop);
+    $this->service->register($userWaitlisted, $workshop);
+
+    $this->service->cancel($userConfirmed, $workshop);
+
+    Notification::assertSentTo(
+        $userWaitlisted,
+        PromotedFromWaitlist::class,
+        function ($notification) use ($workshop) {
+            return $notification->workshop->id === $workshop->id;
+        }
+    );
 });
 
 test('FIFO Promotion: Canceling a spot moves the first waitlisted user to confirmed', function () {
