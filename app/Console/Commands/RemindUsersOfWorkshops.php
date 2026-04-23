@@ -10,7 +10,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
-#[Signature('app:remind-users-of-workshops')]
+#[Signature('app:remind-users-of-workshops {--dry-run : Print list of recipients without sending emails}')]
 #[Description('Identify upcoming workshops within the next 24 hours and notify confirmed users.')]
 class RemindUsersOfWorkshops extends Command
 {
@@ -19,6 +19,10 @@ class RemindUsersOfWorkshops extends Command
      */
     public function handle()
     {
+        $dryRun = $this->option('dry-run');
+        
+        Log::info('Reminder command started' . ($dryRun ? ' (DRY RUN)' : ''));
+        
         $tomorrowWindow = now()->addHours(24);
         
         $workshops = Workshop::with(['users' => function ($query) {
@@ -30,6 +34,7 @@ class RemindUsersOfWorkshops extends Command
 
         if ($workshops->isEmpty()) {
             $this->info('No workshops starting within the next 24 hours.');
+            Log::info('Reminder command ended: No workshops found.');
             return;
         }
 
@@ -42,8 +47,15 @@ class RemindUsersOfWorkshops extends Command
             if ($attendeeCount > 0) {
                 try {
                     foreach ($workshop->users as $user) {
-                        Mail::to($user->email)->send(new WorkshopReminder($workshop));
-                        Log::info("Reminder sent to {$user->email} for workshop: {$workshop->title}");
+                        if ($dryRun) {
+                            $this->line("Dry run: Would send reminder to {$user->email} for '{$workshop->title}'");
+                        } else {
+                            Mail::to($user->email)->send(new WorkshopReminder($workshop));
+                            Log::info("Reminder sent to {$user->email} for workshop: {$workshop->title}");
+                        }
+                    }
+                    if ($dryRun) {
+                        $status = 'Success (Dry Run)';
                     }
                 } catch (\Exception $e) {
                     Log::error("Failed to send reminders for workshop {$workshop->id}: " . $e->getMessage());
@@ -64,5 +76,7 @@ class RemindUsersOfWorkshops extends Command
             ['Workshop Title', 'Attendee Count', 'Status'],
             $results
         );
+
+        Log::info('Reminder command finished successfully' . ($dryRun ? ' (DRY RUN)' : ''));
     }
 }
