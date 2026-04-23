@@ -85,14 +85,32 @@ const metrics = getEngagementMetrics();
                 </div>
                 <div class="p-8 lg:p-12">
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
-                        <div class="lg:col-span-2 space-y-6">
-                            <div class="flex items-center space-x-2 text-indigo-600">
-                                <Info class="h-5 w-5" />
-                                <h2 class="text-lg font-black uppercase tracking-widest">About this workshop</h2>
+                        <div class="lg:col-span-2 space-y-12">
+                            <!-- About Section -->
+                            <div class="space-y-6">
+                                <div class="flex items-center space-x-2 text-indigo-600">
+                                    <Info class="h-5 w-5" />
+                                    <h2 class="text-lg font-black uppercase tracking-widest">About this workshop</h2>
+                                </div>
+                                <p class="text-gray-600 leading-relaxed text-lg whitespace-pre-wrap">{{ workshop.description }}</p>
                             </div>
-                            <p class="text-gray-600 leading-relaxed text-lg whitespace-pre-wrap">{{ workshop.description }}</p>
+
+                            <!-- Speaker Profile Section -->
+                            <div v-if="workshop.speaker_name" class="space-y-6">
+                                <div class="flex items-center space-x-2 text-indigo-600">
+                                    <Users class="h-5 w-5" />
+                                    <h2 class="text-lg font-black uppercase tracking-widest">About the Speaker</h2>
+                                </div>
+                                <div class="bg-indigo-50/50 rounded-[2rem] p-8 flex flex-col md:flex-row items-center md:items-start gap-8">
+                                    <img :src="workshop.speaker_photo" class="h-24 w-24 rounded-3xl object-cover shadow-md ring-4 ring-white" />
+                                    <div class="space-y-3 text-center md:text-left">
+                                        <h3 class="text-2xl font-black text-gray-900 tracking-tight">{{ workshop.speaker_name }}</h3>
+                                        <p class="text-gray-600 leading-relaxed font-medium">{{ workshop.speaker_bio || 'No bio provided.' }}</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="bg-gray-50 rounded-3xl p-8 space-y-6">
+                        <div class="bg-gray-50 rounded-3xl p-8 space-y-6 h-fit sticky top-8">
                             <h3 class="text-sm font-black text-gray-400 uppercase tracking-widest">At a Glance</h3>
                             <div class="space-y-4">
                                 <div class="flex items-center justify-between p-4 bg-white rounded-2xl shadow-sm">

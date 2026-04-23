@@ -41,6 +41,7 @@ const editingWorkshop = ref(null);
 const workshopToDelete = ref(null);
 const search = ref(props.filters.search || '');
 const photoPreview = ref(null);
+const speakerPhotoPreview = ref(null);
 
 const form = useForm({
     title: '',
@@ -49,6 +50,9 @@ const form = useForm({
     duration_minutes: '',
     capacity: '',
     cover_photo: null,
+    speaker_name: '',
+    speaker_bio: '',
+    speaker_photo: null,
     _method: 'POST'
 });
 
@@ -58,6 +62,7 @@ const openCreateModal = () => {
     form.clearErrors();
     form._method = 'POST';
     photoPreview.value = null;
+    speakerPhotoPreview.value = null;
     showFormModal.value = true;
 };
 
@@ -73,8 +78,12 @@ const openEditModal = (workshop) => {
     form.duration_minutes = workshop.duration_minutes;
     form.capacity = workshop.capacity;
     form.cover_photo = null;
+    form.speaker_name = workshop.speaker_name || '';
+    form.speaker_bio = workshop.speaker_bio || '';
+    form.speaker_photo = null;
     form._method = 'POST';
     photoPreview.value = workshop.cover_photo;
+    speakerPhotoPreview.value = workshop.speaker_photo;
     showFormModal.value = true;
 };
 
@@ -85,6 +94,18 @@ const handlePhotoChange = (e) => {
         const reader = new FileReader();
         reader.onload = (e) => {
             photoPreview.value = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+};
+
+const handleSpeakerPhotoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+        form.speaker_photo = file;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            speakerPhotoPreview.value = e.target.result;
         };
         reader.readAsDataURL(file);
     }
@@ -406,6 +427,7 @@ const getSortIcon = (field) => {
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="md:col-span-2">
+                            <h3 class="text-sm font-black text-indigo-600 uppercase tracking-widest border-b border-indigo-50 pb-2 mb-4">General Information</h3>
                             <InputLabel for="title" value="Workshop Title" class="text-xs font-black uppercase tracking-widest text-gray-400 mb-2" />
                             <TextInput
                                 id="title"
@@ -429,6 +451,69 @@ const getSortIcon = (field) => {
                                 placeholder="What will participants learn?"
                             />
                             <InputError class="mt-2" :message="form.errors.description" />
+                        </div>
+
+                        <!-- Speaker Section -->
+                        <div class="md:col-span-2 pt-4">
+                            <h3 class="text-sm font-black text-indigo-600 uppercase tracking-widest border-b border-indigo-50 pb-2 mb-4">Speaker Profile</h3>
+                            <div class="flex flex-col md:flex-row gap-6 items-start">
+                                <div class="flex-shrink-0">
+                                    <div class="relative group h-24 w-24 rounded-3xl overflow-hidden shadow-sm ring-4 ring-gray-50">
+                                        <img
+                                            :src="speakerPhotoPreview"
+                                            class="w-full h-full object-cover group-hover:opacity-75 transition-all"
+                                            v-if="speakerPhotoPreview"
+                                        />
+                                        <div v-else class="w-full h-full bg-gray-100 flex items-center justify-center border-2 border-dashed border-gray-200">
+                                            <Camera class="h-6 w-6 text-gray-300" />
+                                        </div>
+                                        <label
+                                            for="speaker_photo"
+                                            class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity"
+                                        >
+                                            <div class="bg-black/50 p-1.5 rounded-lg">
+                                                <Plus class="h-4 w-4 text-white" />
+                                            </div>
+                                        </label>
+                                        <input
+                                            type="file"
+                                            id="speaker_photo"
+                                            class="hidden"
+                                            @change="handleSpeakerPhotoChange"
+                                            accept="image/*"
+                                        />
+                                    </div>
+                                    <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest text-center mt-2">Speaker Photo</p>
+                                </div>
+                                <div class="flex-1 space-y-4 w-full">
+                                    <div>
+                                        <InputLabel for="speaker_name" value="Speaker Name" class="text-xs font-black uppercase tracking-widest text-gray-400 mb-2" />
+                                        <TextInput
+                                            id="speaker_name"
+                                            type="text"
+                                            class="mt-1 block w-full bg-gray-50 border-transparent focus:bg-white transition-all rounded-2xl"
+                                            v-model="form.speaker_name"
+                                            placeholder="e.g. Jane Smith"
+                                        />
+                                        <InputError class="mt-2" :message="form.errors.speaker_name" />
+                                    </div>
+                                    <div>
+                                        <InputLabel for="speaker_bio" value="Speaker Bio" class="text-xs font-black uppercase tracking-widest text-gray-400 mb-2" />
+                                        <TextArea
+                                            id="speaker_bio"
+                                            class="mt-1 block w-full bg-gray-50 border-transparent focus:bg-white transition-all rounded-2xl"
+                                            v-model="form.speaker_bio"
+                                            rows="2"
+                                            placeholder="A short introduction of the speaker."
+                                        />
+                                        <InputError class="mt-2" :message="form.errors.speaker_bio" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="md:col-span-2 pt-4">
+                            <h3 class="text-sm font-black text-indigo-600 uppercase tracking-widest border-b border-indigo-50 pb-2 mb-4">Logistics</h3>
                         </div>
 
                         <div>

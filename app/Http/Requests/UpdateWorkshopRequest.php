@@ -28,6 +28,10 @@ class UpdateWorkshopRequest extends FormRequest
             'starts_at' => 'sometimes|required|date|after:now',
             'duration_minutes' => 'sometimes|required|integer|min:1',
             'capacity' => 'sometimes|required|integer|min:1',
+            'speaker_name' => 'nullable|string|max:255',
+            'speaker_bio' => 'nullable|string',
+            'cover_photo' => 'nullable|image|max:2048',
+            'speaker_photo' => 'nullable|image|max:2048',
         ];
     }
 }

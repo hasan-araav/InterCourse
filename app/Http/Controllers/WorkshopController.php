@@ -83,6 +83,10 @@ class WorkshopController extends Controller
             $validated['cover_photo_path'] = $request->file('cover_photo')->store('workshop-covers', 'public');
         }
 
+        if ($request->hasFile('speaker_photo')) {
+            $validated['speaker_photo_path'] = $request->file('speaker_photo')->store('speaker-photos', 'public');
+        }
+
         Workshop::create($validated);
 
         return redirect()->route('admin.workshops.index')
@@ -108,6 +112,9 @@ class WorkshopController extends Controller
                 'duration_minutes' => $workshop->duration_minutes,
                 'capacity' => $workshop->capacity,
                 'cover_photo' => $workshop->cover_photo_url,
+                'speaker_name' => $workshop->speaker_name,
+                'speaker_bio' => $workshop->speaker_bio,
+                'speaker_photo' => $workshop->speaker_photo_url,
                 'attendees' => $workshop->users->where('pivot.status', 'confirmed')->map(function ($user) {
                     return [
                         'id' => $user->id,
@@ -151,6 +158,13 @@ class WorkshopController extends Controller
                 Storage::disk('public')->delete($workshop->cover_photo_path);
             }
             $validated['cover_photo_path'] = $request->file('cover_photo')->store('workshop-covers', 'public');
+        }
+
+        if ($request->hasFile('speaker_photo')) {
+            if ($workshop->speaker_photo_path) {
+                Storage::disk('public')->delete($workshop->speaker_photo_path);
+            }
+            $validated['speaker_photo_path'] = $request->file('speaker_photo')->store('speaker-photos', 'public');
         }
 
         $workshop->update($validated);

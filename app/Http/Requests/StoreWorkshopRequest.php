@@ -28,6 +28,10 @@ class StoreWorkshopRequest extends FormRequest
             'starts_at' => 'required|date|after:now',
             'duration_minutes' => 'required|integer|min:1',
             'capacity' => 'required|integer|min:1',
+            'speaker_name' => 'nullable|string|max:255',
+            'speaker_bio' => 'nullable|string',
+            'cover_photo' => 'nullable|image|max:2048',
+            'speaker_photo' => 'nullable|image|max:2048',
         ];
     }
 }

@@ -17,6 +17,9 @@ class Workshop extends Model
         'duration_minutes',
         'capacity',
         'cover_photo_path',
+        'speaker_name',
+        'speaker_bio',
+        'speaker_photo_path',
     ];
 
     /**
@@ -31,7 +34,19 @@ class Workshop extends Model
             : "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=2070&auto=format&fit=crop";
     }
 
-    protected $appends = ['cover_photo_url'];
+    /**
+     * Get the speaker's photo URL.
+     *
+     * @return string
+     */
+    public function getSpeakerPhotoUrlAttribute(): string
+    {
+        return $this->speaker_photo_path
+            ? asset('storage/' . $this->speaker_photo_path)
+            : "https://ui-avatars.com/api/?name=" . urlencode($this->speaker_name ?? 'Speaker') . "&background=6366f1&color=fff";
+    }
+
+    protected $appends = ['cover_photo_url', 'speaker_photo_url'];
 
     protected function casts(): array
     {
