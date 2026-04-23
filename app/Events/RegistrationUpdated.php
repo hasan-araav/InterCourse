@@ -33,6 +33,7 @@ class RegistrationUpdated implements ShouldBroadcastNow
     {
         return [
             new Channel('workshops.' . $this->workshop->id),
+            new PrivateChannel('admin.stats'),
         ];
     }
 
@@ -54,6 +55,7 @@ class RegistrationUpdated implements ShouldBroadcastNow
         return [
             'id' => $this->workshop->id,
             'confirmed_count' => $this->workshop->users()->wherePivot('status', 'confirmed')->count(),
+            'waitlist_count' => $this->workshop->users()->wherePivot('status', 'waitlisted')->count(),
             'capacity' => $this->workshop->capacity,
         ];
     }

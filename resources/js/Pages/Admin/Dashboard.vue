@@ -1,6 +1,6 @@
 <script setup>
 import AdminLayout from '@/Layouts/AdminLayout.vue';
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import {
     Users,
@@ -42,7 +42,12 @@ const props = defineProps({
 
 const upcomingData = ref([...props.upcomingStats]);
 const pulseStates = ref({});
+const pulseGlobal = ref(false);
 const isLive = ref(false);
+
+watch(() => props.upcomingStats, (newStats) => {
+    upcomingData.value = [...newStats];
+}, { deep: true });
 
 const trendChartData = computed(() => ({
     labels: props.registrationTrends.map(t => t.date),
@@ -93,25 +98,50 @@ onMounted(() => {
             isLive.value = states.current === 'connected';
         });
 
-        upcomingData.value.forEach((workshop) => {
-            window.Echo.channel('workshops.' + workshop.id)
-                .listen('.registration.updated', (data) => {
-                    const index = upcomingData.value.findIndex(w => w.id === data.id);
-                    if (index !== -1) {
-                        upcomingData.value[index].confirmed_count = data.confirmed_count;
-                        upcomingData.value[index].fill_percentage = data.capacity > 0
-                            ? Math.round((data.confirmed_count / data.capacity) * 100)
-                            : 0;
-                        pulseStates.value[workshop.id] = true;
-                        setTimeout(() => pulseStates.value[workshop.id] = false, 1000);
-                    }
+        // Listen to global stats channel for dashboard-wide updates
+        window.Echo.private('admin.stats')
+            .listen('.registration.updated', (data) => {
+                // 1. Update the local upcoming data for immediate feedback
+                const index = upcomingData.value.findIndex(w => w.id === data.id);
+                if (index !== -1) {
+                    upcomingData.value[index].confirmed_count = data.confirmed_count;
+                    upcomingData.value[index].waitlist_count = data.waitlist_count;
+                    upcomingData.value[index].fill_percentage = data.capacity > 0
+                        ? Math.round((data.confirmed_count / data.capacity) * 100)
+                        : 0;
+
+                    // Trigger pulse animation
+                    pulseStates.value[data.id] = true;
+                    setTimeout(() => pulseStates.value[data.id] = false, 1000);
+                }
+
+                // Global pulse for stats cards
+                pulseGlobal.value = true;
+                setTimeout(() => pulseGlobal.value = false, 1000);
+
+                // 2. Refresh the global stats from the server to ensure accuracy
+                router.reload({
+                    only: [
+                        'totalRegistrations',
+                        'totalWaitlist',
+                        'capacityAlerts',
+                        'mostPopular',
+                        'registrationTrends',
+                        'statusDistribution',
+                        'upcomingStats',
+                        'pastStats'
+                    ],
+                    preserveScroll: true,
+                    preserveState: true
                 });
-        });
+            });
     }
 });
 
 onUnmounted(() => {
-    upcomingData.value.forEach(w => window.Echo.leave('workshops.' + w.id));
+    if (window.Echo) {
+        window.Echo.leave('admin.stats');
+    }
 });
 </script>
 
@@ -139,7 +169,10 @@ onUnmounted(() => {
 
             <!-- Stats Overview Cards -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300 group">
+                <div
+                    class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 group"
+                    :class="{ 'ring-2 ring-indigo-500 scale-[1.02] shadow-indigo-100': pulseGlobal }"
+                >
                     <div class="flex items-center justify-between mb-4">
                         <div class="p-3 bg-indigo-50 rounded-2xl group-hover:bg-indigo-100 transition-colors">
                             <UserCheck class="h-6 w-6 text-indigo-600" />
@@ -147,10 +180,13 @@ onUnmounted(() => {
                         <span class="text-xs font-bold text-green-600 bg-green-50 px-2.5 py-1 rounded-full">+12%</span>
                     </div>
                     <p class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Total Confirmations</p>
-                    <h3 class="text-3xl font-black text-gray-900 mt-1">{{ totalRegistrations }}</h3>
+                    <h3 class="text-3xl font-black text-gray-900 mt-1 transition-all" :class="{ 'scale-110 text-indigo-600': pulseGlobal }">{{ totalRegistrations }}</h3>
                 </div>
 
-                <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300 group">
+                <div
+                    class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 group"
+                    :class="{ 'ring-2 ring-amber-500 scale-[1.02] shadow-amber-100': pulseGlobal }"
+                >
                     <div class="flex items-center justify-between mb-4">
                         <div class="p-3 bg-amber-50 rounded-2xl group-hover:bg-amber-100 transition-colors">
                             <Clock class="h-6 w-6 text-amber-600" />
@@ -158,10 +194,13 @@ onUnmounted(() => {
                         <span class="text-xs font-bold text-amber-600 bg-amber-50 px-2.5 py-1 rounded-full">Active</span>
                     </div>
                     <p class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Waitlist Demand</p>
-                    <h3 class="text-3xl font-black text-gray-900 mt-1">{{ totalWaitlist }}</h3>
+                    <h3 class="text-3xl font-black text-gray-900 mt-1 transition-all" :class="{ 'scale-110 text-amber-600': pulseGlobal }">{{ totalWaitlist }}</h3>
                 </div>
 
-                <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300 group">
+                <div
+                    class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 group"
+                    :class="{ 'ring-2 ring-red-500 scale-[1.02] shadow-red-100': pulseGlobal }"
+                >
                     <div class="flex items-center justify-between mb-4">
                         <div class="p-3 bg-red-50 rounded-2xl group-hover:bg-red-100 transition-colors">
                             <AlertCircle class="h-6 w-6 text-red-600" />
@@ -169,10 +208,13 @@ onUnmounted(() => {
                         <span v-if="capacityAlerts > 0" class="text-xs font-bold text-red-600 bg-red-50 px-2.5 py-1 rounded-full">Action Needed</span>
                     </div>
                     <p class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Capacity Alerts</p>
-                    <h3 class="text-3xl font-black text-gray-900 mt-1">{{ capacityAlerts }}</h3>
+                    <h3 class="text-3xl font-black text-gray-900 mt-1 transition-all" :class="{ 'scale-110 text-red-600': pulseGlobal }">{{ capacityAlerts }}</h3>
                 </div>
 
-                <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300 group">
+                <div
+                    class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 group"
+                    :class="{ 'ring-2 ring-emerald-500 scale-[1.02] shadow-emerald-100': pulseGlobal }"
+                >
                     <div class="flex items-center justify-between mb-4">
                         <div class="p-3 bg-emerald-50 rounded-2xl group-hover:bg-emerald-100 transition-colors">
                             <TrendingUp class="h-6 w-6 text-emerald-600" />
@@ -180,7 +222,7 @@ onUnmounted(() => {
                         <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">Top</span>
                     </div>
                     <p class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Popular Workshop</p>
-                    <h3 class="text-lg font-bold text-gray-900 mt-1 truncate" :title="mostPopular[0]?.title">{{ mostPopular[0]?.title || 'N/A' }}</h3>
+                    <h3 class="text-lg font-bold text-gray-900 mt-1 truncate transition-all" :class="{ 'scale-110 text-emerald-600': pulseGlobal }" :title="mostPopular[0]?.title">{{ mostPopular[0]?.title || 'N/A' }}</h3>
                 </div>
             </div>
 
