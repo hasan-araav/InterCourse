@@ -33,4 +33,19 @@ class Workshop extends Model
             ->withPivot('status', 'position')
             ->withTimestamps();
     }
+
+    public function confirmedUsers()
+    {
+        return $this->users()->wherePivot('status', 'confirmed');
+    }
+
+    public function availableSeats(): int
+    {
+        return max(0, $this->capacity - $this->confirmedUsers()->count());
+    }
+
+    public function isFull(): bool
+    {
+        return $this->availableSeats() <= 0;
+    }
 }
