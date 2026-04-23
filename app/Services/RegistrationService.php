@@ -16,7 +16,7 @@ class RegistrationService
      */
     public function register(User $user, Workshop $workshop): Registration
     {
-        return DB::transaction(function () use ($user, $workshop) {
+        $registration = DB::transaction(function () use ($user, $workshop) {
             // 1. Check for existing registration
             $existing = Registration::where('user_id', $user->id)
                 ->where('workshop_id', $workshop->id)
@@ -47,17 +47,17 @@ class RegistrationService
                     ->count() + 1;
             }
 
-            $registration = Registration::create([
+            return Registration::create([
                 'user_id' => $user->id,
                 'workshop_id' => $workshop->id,
                 'status' => $status,
                 'position' => $position,
             ]);
-
-            RegistrationUpdated::dispatch($workshop);
-
-            return $registration;
         });
+
+        RegistrationUpdated::dispatch($workshop);
+
+        return $registration;
     }
 
     /**
@@ -84,9 +84,9 @@ class RegistrationService
                 // If a waitlisted registration was cancelled, reorder positions
                 $this->reorderWaitlist($workshop);
             }
-
-            RegistrationUpdated::dispatch($workshop);
         });
+
+        RegistrationUpdated::dispatch($workshop);
     }
 
     /**

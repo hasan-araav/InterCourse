@@ -7,11 +7,11 @@ use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class RegistrationUpdated implements ShouldBroadcast
+class RegistrationUpdated implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -37,6 +37,14 @@ class RegistrationUpdated implements ShouldBroadcast
     }
 
     /**
+     * The event's broadcast name.
+     */
+    public function broadcastAs(): string
+    {
+        return 'registration.updated';
+    }
+
+    /**
      * Get the data to broadcast.
      *
      * @return array<string, mixed>
@@ -45,7 +53,7 @@ class RegistrationUpdated implements ShouldBroadcast
     {
         return [
             'id' => $this->workshop->id,
-            'confirmed_count' => $this->workshop->users()->confirmed()->count(),
+            'confirmed_count' => $this->workshop->users()->wherePivot('status', 'confirmed')->count(),
             'capacity' => $this->workshop->capacity,
         ];
     }

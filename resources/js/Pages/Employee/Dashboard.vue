@@ -1,5 +1,6 @@
 <script setup>
 import { Head, router } from '@inertiajs/vue3';
+import { ref, onMounted, onUnmounted } from 'vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import DangerButton from '@/Components/DangerButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
@@ -9,8 +10,50 @@ const props = defineProps({
     workshops: Array,
 });
 
+const workshopsData = ref([...props.workshops]);
+const pulseStates = ref({});
+let echoChannels = [];
+
+// Watch for prop changes and update local state
+import { watch } from 'vue';
+watch(() => props.workshops, (newWorkshops) => {
+    workshopsData.value = [...newWorkshops];
+}, { deep: true });
+
 // Start polling as a fallback if WebSockets are not active
 usePolling(10000);
+
+onMounted(() => {
+    if (window.Echo) {
+        console.log('Setting up Echo listeners...');
+        workshopsData.value.forEach((workshop) => {
+            window.Echo.channel('workshops.' + workshop.id)
+                .listen('.registration.updated', (data) => {
+                    console.log('Received update for workshop:', data.id);
+                    const index = workshopsData.value.findIndex(w => w.id === data.id);
+                    if (index !== -1) {
+                        workshopsData.value[index].remaining_seats = data.capacity - data.confirmed_count;
+                        workshopsData.value[index].confirmed_count = data.confirmed_count;
+                        pulseStates.value[workshop.id] = true;
+                        setTimeout(() => {
+                            pulseStates.value[workshop.id] = false;
+                        }, 1000);
+                    }
+                });
+
+            echoChannels.push('workshops.' + workshop.id);
+        });
+    } else {
+        console.warn('Echo not found. Realtime updates disabled.');
+    }
+});
+
+onUnmounted(() => {
+    echoChannels.forEach((channelName) => {
+        window.Echo.leave(channelName);
+    });
+    echoChannels = [];
+});
 
 const register = (workshopId) => {
     router.post(route('workshops.register', workshopId), {}, {
@@ -51,11 +94,11 @@ const formatDate = (dateString) => {
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div v-for="workshop in workshops" :key="workshop.id" class="bg-white overflow-hidden shadow-sm sm:rounded-lg flex flex-col">
+                <div v-for="workshop in workshopsData" :key="workshop.id" class="bg-white overflow-hidden shadow-sm sm:rounded-lg flex flex-col">
                     <div class="p-6 flex-1">
                         <div class="flex justify-between items-start mb-4">
                             <h3 class="text-lg font-bold text-gray-900">{{ workshop.title }}</h3>
-                            <span 
+                            <span
                                 :class="{
                                     'bg-green-100 text-green-800': workshop.user_registration?.status === 'confirmed',
                                     'bg-yellow-100 text-yellow-800': workshop.user_registration?.status === 'waitlisted',
@@ -82,7 +125,12 @@ const formatDate = (dateString) => {
                             </div>
                             <div class="flex items-center">
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                                {{ workshop.remaining_seats }} / {{ workshop.capacity }} seats remaining
+                                <span
+                                    :class="{ 'counter-pulse': pulseStates[workshop.id] }"
+                                    class="transition-all duration-300"
+                                >
+                                    {{ workshop.remaining_seats }} / {{ workshop.capacity }} seats remaining
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -104,10 +152,27 @@ const formatDate = (dateString) => {
                     </div>
                 </div>
 
-                <div v-if="workshops.length === 0" class="col-span-full bg-white p-12 text-center rounded-lg shadow-sm">
+                <div v-if="workshopsData.length === 0" class="col-span-full bg-white p-12 text-center rounded-lg shadow-sm">
                     <p class="text-gray-500">No upcoming workshops found.</p>
                 </div>
             </div>
         </div>
     </div>
 </template>
+
+<style scoped>
+.counter-pulse {
+    animation: pulse 0.6s ease-in-out;
+    color: #4f46e5;
+    font-weight: bold;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+}
+</style>
