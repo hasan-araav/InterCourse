@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminStatsController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\WorkshopController;
@@ -76,6 +77,7 @@ Route::get('/my-schedule', function (Request $request) {
 })->middleware(['auth', 'verified'])->name('my-schedule');
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/stats', [AdminStatsController::class, 'index'])->name('stats.index');
     Route::resource('workshops', WorkshopController::class);
 });
 

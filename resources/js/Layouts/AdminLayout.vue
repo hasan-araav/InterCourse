@@ -33,6 +33,12 @@ const props = defineProps({
                 >
                     Manage Workshops
                 </SidebarLink>
+                <SidebarLink
+                    :href="route('admin.stats.index')"
+                    :active="route().current('admin.stats.*')"
+                >
+                    Statistics
+                </SidebarLink>
             </nav>
         </aside>
 
