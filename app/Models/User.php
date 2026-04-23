@@ -27,9 +27,13 @@ class User extends Authenticatable
      */
     public function getPhotoUrlAttribute(): string
     {
-        return $this->photo_path
-            ? asset('storage/' . $this->photo_path)
-            : "https://ui-avatars.com/api/?name=" . urlencode($this->name) . "&background=6366f1&color=fff";
+        if (!$this->photo_path) {
+            return "https://ui-avatars.com/api/?name=" . urlencode($this->name) . "&background=6366f1&color=fff";
+        }
+
+        return str_starts_with($this->photo_path, 'http')
+            ? $this->photo_path
+            : asset('storage/' . $this->photo_path);
     }
 
     /**
