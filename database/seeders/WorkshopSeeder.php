@@ -12,6 +12,14 @@ class WorkshopSeeder extends Seeder
      */
     public function run(): void
     {
-        \App\Models\Workshop::factory(10)->create();
+        // 5 workshops starting in the next 24 hours
+        \App\Models\Workshop::factory(5)->create([
+            'starts_at' => now()->addHours(rand(1, 23)),
+        ]);
+
+        // 5 workshops starting later
+        \App\Models\Workshop::factory(5)->create([
+            'starts_at' => now()->addDays(rand(2, 30)),
+        ]);
     }
 }
