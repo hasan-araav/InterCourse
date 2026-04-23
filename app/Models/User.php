@@ -32,4 +32,11 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function workshops()
+    {
+        return $this->belongsToMany(Workshop::class, 'registrations')
+            ->withPivot('status', 'position')
+            ->withTimestamps();
+    }
 }

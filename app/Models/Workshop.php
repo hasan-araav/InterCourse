@@ -26,4 +26,11 @@ class Workshop extends Model
             'capacity' => 'integer',
         ];
     }
+
+    public function users()
+    {
+        return $this->belongsToMany(User::class, 'registrations')
+            ->withPivot('status', 'position')
+            ->withTimestamps();
+    }
 }
