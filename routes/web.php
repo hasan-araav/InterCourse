@@ -90,7 +90,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/users', [UserManagementController::class, 'index'])->name('users.index');
     Route::get('/users/{user}', [UserManagementController::class, 'show'])->name('users.show');
     Route::post('/users', [UserManagementController::class, 'store'])->name('users.store');
-    Route::post('/users/{user}', [UserManagementController::class, 'update'])->name('users.update');
+    Route::patch('/users/{user}', [UserManagementController::class, 'update'])->name('users.update');
     Route::delete('/users/{user}', [UserManagementController::class, 'destroy'])->name('users.destroy');
 });
 
@@ -100,7 +100,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/workshops/{workshop}/cancel', [RegistrationController::class, 'destroy'])->name('workshops.cancel');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::post('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
