@@ -1,6 +1,6 @@
 <script setup>
-import { Head, Link, router } from '@inertiajs/vue3';
-import { ref, onMounted, onUnmounted, watch } from 'vue';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { ref, onMounted, onUnmounted, watch, computed } from 'vue';
 import {
     Calendar,
     Clock,
@@ -26,6 +26,7 @@ const workshopsData = ref([...props.workshops]);
 const search = ref('');
 const pulseStates = ref({});
 let echoChannels = [];
+const page = usePage();
 
 // Watch for prop changes and update local state
 watch(() => props.workshops, (newWorkshops) => {
@@ -37,6 +38,7 @@ usePolling(10000);
 
 onMounted(() => {
     if (window.Echo) {
+        // Public channel for workshop stats
         workshopsData.value.forEach((workshop) => {
             window.Echo.channel('workshops.' + workshop.id)
                 .listen('.registration.updated', (data) => {
@@ -50,6 +52,20 @@ onMounted(() => {
                 });
             echoChannels.push('workshops.' + workshop.id);
         });
+
+        // Private channel for personal registration status updates
+        window.Echo.private('App.Models.User.' + page.props.auth.user.id)
+            .listen('.user.registration.updated', (data) => {
+                const index = workshopsData.value.findIndex(w => w.id === data.workshop_id);
+                if (index !== -1) {
+                    // Update the user_registration object for this workshop
+                    if (workshopsData.value[index].user_registration) {
+                        workshopsData.value[index].user_registration.status = data.status;
+                        workshopsData.value[index].user_registration.position = data.position;
+                    }
+                }
+            });
+        echoChannels.push('App.Models.User.' + page.props.auth.user.id);
     }
 });
 
@@ -81,13 +97,14 @@ const formatDate = (dateString) => {
     });
 };
 
-const filteredWorkshops = ref(workshopsData);
-watch([search, workshopsData], () => {
-    filteredWorkshops.value = workshopsData.value.filter(w =>
-        w.title.toLowerCase().includes(search.value.toLowerCase()) ||
-        w.description.toLowerCase().includes(search.value.toLowerCase())
+const filteredWorkshops = computed(() => {
+    if (!search.value) return workshopsData.value;
+    const query = search.value.toLowerCase();
+    return workshopsData.value.filter(w =>
+        w.title.toLowerCase().includes(query) ||
+        w.description.toLowerCase().includes(query)
     );
-}, { immediate: true });
+});
 </script>
 
 <template>

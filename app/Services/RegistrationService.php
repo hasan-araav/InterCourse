@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Events\RegistrationUpdated;
+use App\Events\UserRegistrationUpdated;
 use App\Models\Registration;
 use App\Models\User;
 use App\Models\Workshop;
@@ -130,6 +131,8 @@ class RegistrationService
                 'position' => null,
             ]);
 
+            UserRegistrationUpdated::dispatch($nextInLine);
+
             // After promoting, reorder the remaining waitlist
             $this->reorderWaitlist($workshop);
         }
@@ -146,7 +149,13 @@ class RegistrationService
             ->get();
 
         foreach ($waitlisted as $index => $registration) {
-            $registration->update(['position' => $index + 1]);
+            $oldPosition = $registration->position;
+            $newPosition = $index + 1;
+
+            if ($oldPosition !== $newPosition) {
+                $registration->update(['position' => $newPosition]);
+                UserRegistrationUpdated::dispatch($registration);
+            }
         }
     }
 }
