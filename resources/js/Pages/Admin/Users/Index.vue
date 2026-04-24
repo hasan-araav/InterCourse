@@ -70,7 +70,7 @@ const openEditModal = (user) => {
     form.password = '';
     form.password_confirmation = '';
     form.photo = null;
-    form._method = 'POST'; // We use POST with _method=PATCH for multipart/form-data
+    form._method = 'PATCH'; // We use POST with _method=PATCH for multipart/form-data
     photoPreview.value = user.photo;
     showCreateModal.value = true;
 };
@@ -490,7 +490,7 @@ const getSortIcon = (field) => {
                 </div>
                 <h2 class="text-2xl font-black text-gray-900 tracking-tight mb-2">Confirm Deletion</h2>
                 <p class="text-sm text-gray-500 font-medium mb-8">
-                    Are you sure you want to delete <span class="font-black text-gray-900">{{ userToDelete?.name }}</span>? 
+                    Are you sure you want to delete <span class="font-black text-gray-900">{{ userToDelete?.name }}</span>?
                     This action is permanent and will remove all their data from the InterCourse Academy.
                 </p>
 
@@ -498,7 +498,7 @@ const getSortIcon = (field) => {
                     <SecondaryButton @click="showDeleteConfirmation = false" class="rounded-2xl border-2 font-bold px-6 py-3 flex-1">
                         No, Keep User
                     </SecondaryButton>
-                    <button 
+                    <button
                         @click="confirmDelete"
                         class="inline-flex items-center justify-center px-6 py-3 bg-red-600 text-white font-bold rounded-2xl hover:bg-red-700 transition-all shadow-lg shadow-red-100 flex-1"
                     >

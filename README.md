@@ -82,6 +82,9 @@ php artisan app:remind-users-of-workshops --dry-run
 
 # Start the WebSocket server
 php artisan reverb:start
+
+# To see WebPush Notification use HTTPS. If you are using valet run this command on the project directory.
+valet secure
 ```
 
 ### Testing Suite
