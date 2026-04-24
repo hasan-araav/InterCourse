@@ -103,6 +103,23 @@ const cancel = () => {
         </template>
 
         <div class="space-y-8">
+            <!-- Flash Messages -->
+            <div v-if="$page.props.flash?.message" class="p-4 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center text-emerald-700 font-bold text-sm animate-in fade-in slide-in-from-top-4 duration-500">
+                <div class="bg-emerald-100 p-1 rounded-lg mr-3">
+                    <CheckCircle2 class="h-4 w-4" />
+                </div>
+                {{ $page.props.flash.message }}
+            </div>
+
+            <div v-if="Object.keys($page.props.errors).length > 0" class="p-4 bg-rose-50 border border-rose-100 rounded-2xl flex items-center text-rose-700 font-bold text-sm animate-in fade-in slide-in-from-top-4 duration-500">
+                <div class="bg-rose-100 p-1 rounded-lg mr-3">
+                    <AlertCircle class="h-4 w-4" />
+                </div>
+                <div>
+                    <p v-for="error in $page.props.errors" :key="error">{{ error }}</p>
+                </div>
+            </div>
+
             <!-- Workshop Hero Section -->
             <div class="bg-white rounded-[3rem] overflow-hidden shadow-sm border border-gray-100">
                 <div class="relative h-80 lg:h-96">
