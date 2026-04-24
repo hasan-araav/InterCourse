@@ -77,6 +77,9 @@ Ensure your `.env` is configured for local development:
 # Send workshop reminders (Daily 08:00 AM)
 php artisan app:remind-users-of-workshops
 
+# Send workshop reminders dry run (No actual notifications sent)
+php artisan app:remind-users-of-workshops --dry-run
+
 # Start the WebSocket server
 php artisan reverb:start
 ```

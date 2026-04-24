@@ -10,7 +10,7 @@ test('Employees receive a 403 Forbidden when hitting admin routes', function () 
     $employee = User::factory()->create(['role' => User::ROLE_EMPLOYEE]);
 
     $this->actingAs($employee)
-        ->get(route('admin.stats.index'))
+        ->get(route('admin.dashboard'))
         ->assertStatus(403);
 
     $this->actingAs($employee)
