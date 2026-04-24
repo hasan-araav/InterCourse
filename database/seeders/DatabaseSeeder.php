@@ -17,7 +17,7 @@ class DatabaseSeeder extends Seeder
     {
         // Create Admin Users
         User::factory()->admin()->create([
-            'name' => 'Farhana Rahman',
+            'name' => 'Hasan Uj Jaman',
             'email' => 'admin@intercourse.com',
             'password' => bcrypt('password'),
         ]);
@@ -36,16 +36,16 @@ class DatabaseSeeder extends Seeder
 
         // Create Employee Users
         $employees = [
-            ['name' => 'Alice Johnson', 'email' => 'alice@example.com'],
-            ['name' => 'Bob Smith', 'email' => 'bob@example.com'],
-            ['name' => 'Charlie Brown', 'email' => 'charlie@example.com'],
-            ['name' => 'Diana Prince', 'email' => 'diana@example.com'],
-            ['name' => 'Ethan Hunt', 'email' => 'ethant@example.com'],
-            ['name' => 'Fiona Gallagher', 'email' => 'fiona@example.com'],
-            ['name' => 'George Costanza', 'email' => 'george@example.com'],
-            ['name' => 'Hannah Baker', 'email' => 'hannah@example.com'],
-            ['name' => 'Ian Malcolm', 'email' => 'ian@example.com'],
-            ['name' => 'Jane Doe', 'email' => 'jane@example.com'],
+            ['name' => 'Alice Johnson', 'email' => 'alice@intercourse.com'],
+            ['name' => 'Bob Smith', 'email' => 'bob@intercourse.com'],
+            ['name' => 'Charlie Brown', 'email' => 'charlie@intercourse.com'],
+            ['name' => 'Diana Prince', 'email' => 'diana@intercourse.com'],
+            ['name' => 'Ethan Hunt', 'email' => 'ethant@intercourse.com'],
+            ['name' => 'Fiona Gallagher', 'email' => 'fiona@intercourse.com'],
+            ['name' => 'George Costanza', 'email' => 'george@intercourse.com'],
+            ['name' => 'Hannah Baker', 'email' => 'hannah@intercourse.com'],
+            ['name' => 'Ian Malcolm', 'email' => 'ian@intercourse.com'],
+            ['name' => 'Jane Doe', 'email' => 'jane@intercourse.com'],
         ];
 
         foreach ($employees as $employee) {
